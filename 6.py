@@ -1,28 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def lwr(x,X,y,tau):
-    W = np.diag(np.exp(-np.sum((X - x) ** 2, axis=1) / (2 * tau**2)))
-    theta = np.linalg.inv(X.T @ W @ X) @ X.T @ W @ y
-    return x @ theta
+def locally_weighted_regression(X, y, x_query, tau):
+    m = len(X)
+    X_b = np.c_[np.ones((m, 1)), X]
+    x_query_b = np.array([1, x_query])
+    W = np.exp(-np.square(X - x_query) / (2 * tau ** 2))
+    W = np.diag(W)
+    theta = np.linalg.inv(X_b.T @ W @ X_b) @ X_b.T @ W @ y
+    return x_query_b @ theta
 
-np.random.seed(42)
-X=np.linspace(0,2*np.pi,100)
-y=np.sin(X) + 0.1*np.random.randn(100)
-X_bias=np.c_[np.ones_like(X),X]
+X = np.array([1,2,3,4,5,6,7,8,9,10])
+y = np.array([1,3,2,4,3.5,5,6,7,6.5,8])
 
-x_test=np.linspace(0,2*np.pi,200)
-x_test_bias = np.c_[np.ones_like(x_test), x_test]
-tau=0.5
+X_query = np.linspace(1, 10, 100)
+tau = 1.0
 
+y_lwr = np.array([locally_weighted_regression(X, y, x_q, tau) for x_q in X_query])
 
-y_pred = np.array([lwr(xi, X_bias, y, tau) for xi in x_test_bias])
-plt.figure(figsize=(10,6))
-plt.scatter(X,y,color='blue',label=f'LWR Fit (tau={tau})',linewidth=2)
-
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title('Locally weighted regression')
+plt.figure(figsize=(10, 6))
+plt.scatter(X, y, color='blue', label='Data Points')
+plt.plot(X_query, y_lwr, color='red', label='Locally Weighted Regression')
+plt.title("Locally Weighted Regression Fit")
+plt.xlabel("X")
+plt.ylabel("Y")
 plt.legend()
-plt.grid(alpha=0.3)
+plt.grid(True)
 plt.show()
